@@ -23,9 +23,7 @@ class Game:
         _grid = grid.grid
         self.channels = Channels(_grid, self.agents)
         self.grid_dims = (_grid.shape[0], _grid.shape[1])
-        self.general_positions = {
-            agent: np.argwhere(_grid == chr(ord("A") + i))[0] for i, agent in enumerate(self.agents)
-        }
+        self.general_positions = {agent: np.argwhere(_grid == chr(ord("A") + i))[0] for i, agent in enumerate(self.agents)}
 
         # Time stuff
         self.time = 0
@@ -38,6 +36,34 @@ class Game:
 
         self.winner = None
         self.loser = None
+
+    def resolve_combat(
+        self,
+        attacker_army: int,
+        defender_army: int,
+        attacking_agent: str,
+        defending_agent: str,
+        attacker_pos: tuple[int, int],
+        defender_pos: tuple[int, int],
+    ) -> tuple[str, int]:
+        """
+        Resolve combat between attacking and defending armies.
+
+        Args:
+            attacker_army: Size of the attacking army
+            defender_army: Size of the defending army
+            attacking_agent: ID of the attacking agent
+            defending_agent: ID of the defending agent
+            attacker_pos: (row, col) of attacking position
+            defender_pos: (row, col) of defending position
+
+        Returns:
+            tuple: (winner_agent, remaining_army_size)
+        """
+
+        n = 2.85
+        strength_ratio = attacker_army / defender_army
+        p_attacker_wins = np.power(strength_ratio, n) / (np.power(strength_ratio, n) + 1)
 
     def step(self, actions: dict[str, Action]) -> tuple[dict[str, Observation], dict[str, Any]]:
         """
