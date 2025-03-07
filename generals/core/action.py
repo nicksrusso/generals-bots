@@ -70,7 +70,13 @@ def compute_valid_move_mask(observation: Observation) -> np.ndarray:
     height, width = observation.owned_cells.shape
 
     ownership_channel = observation.owned_cells
-    more_than_1_army = (observation.armies > 1) * ownership_channel
+
+    # Original line:
+    # more_than_1_army = (observation.armies > 1) * ownership_channel
+
+    # Updated line to work with float armies:
+    more_than_1_army = (observation.armies > 1.0) * ownership_channel
+
     owned_cells_indices = np.argwhere(more_than_1_army)
     valid_action_mask = np.zeros((height, width, 4), dtype=bool)
 

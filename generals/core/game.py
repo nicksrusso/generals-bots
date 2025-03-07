@@ -77,10 +77,10 @@ class Game:
             if pass_turn == 1:
                 continue
             if split_army == 1:  # Agent wants to split the army
-                army_to_move = self.channels.armies[si, sj] // 2
+                army_to_move = self.channels.armies[si, sj] / 2.0
             else:  # Leave just one army in the source cell
                 army_to_move = self.channels.armies[si, sj] - 1
-            if army_to_move < 1:  # Skip if army size to move is less than 1
+            if army_to_move < 1.0:  # Skip if army size to move is less than 1
                 continue
 
             # Cap the amount of army to move (previous moves may have lowered available army)
