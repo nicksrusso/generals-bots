@@ -15,7 +15,16 @@ class Observation(dict):
     knowing the dictionaries' members which a dataclass/class provides.
     """
 
-    armies: np.ndarray
+    # Unit type arrays
+    cavalry: np.ndarray
+    infantry: np.ndarray
+    archers: np.ndarray
+    siege: np.ndarray
+
+    # For backwards compatibility
+    armies: np.ndarray  # Total of all unit types
+
+    # Original observation fields
     generals: np.ndarray
     cities: np.ndarray
     mountains: np.ndarray
@@ -57,6 +66,10 @@ class Observation(dict):
 
         # Regular zero padding for most arrays
         zero_pad_arrays = [
+            "cavalry",
+            "infantry",
+            "archers",
+            "siege",
             "armies",
             "generals",
             "cities",
@@ -75,7 +88,7 @@ class Observation(dict):
 
     def as_tensor(self, pad_to: int | None = None) -> np.ndarray:
         """
-        Returns a 3D tensor of shape (15, rows, cols). Suitable for neural nets.
+        Returns a 3D tensor of shape (19, rows, cols). Suitable for neural nets.
         """
         if pad_to is not None:
             self.pad_observation(pad_to)
@@ -85,7 +98,14 @@ class Observation(dict):
 
         return np.stack(
             [
+                # Unit type arrays
+                self.cavalry,
+                self.infantry,
+                self.archers,
+                self.siege,
+                # Total armies (for backwards compatibility)
                 self.armies,
+                # Original observation fields
                 self.generals,
                 self.cities,
                 self.mountains,

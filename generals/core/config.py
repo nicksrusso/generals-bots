@@ -7,6 +7,13 @@ PASSABLE: Literal["."] = "."
 MOUNTAIN: Literal["#"] = "#"
 
 
+class UnitType(Enum):
+    CAVALRY = 0
+    INFANTRY = 1
+    ARCHERS = 2
+    SIEGE = 3
+
+
 class Dimension(IntEnum):
     SQUARE_SIZE = 50
     GUI_CELL_HEIGHT = 30
@@ -28,6 +35,12 @@ class Path(StrEnum):
     GENERAL_PATH = str(files("generals.assets.images") / "crownie.png")
     CITY_PATH = str(files("generals.assets.images") / "citie.png")
     MOUNTAIN_PATH = str(files("generals.assets.images") / "mountainie.png")
+
+    # Unit type icons (these would need to be created)
+    CAVALRY_PATH = str(files("generals.assets.images") / "cavalry.png")
+    INFANTRY_PATH = str(files("generals.assets.images") / "infantry.png")
+    ARCHERS_PATH = str(files("generals.assets.images") / "archers.png")
+    SIEGE_PATH = str(files("generals.assets.images") / "siege.png")
 
     # Font options are Quicksand-SemiBold.ttf, Quicksand-Medium.ttf, Quicksand-Light.ttf
     FONT_PATH = str(files("generals.assets.fonts") / "Quicksand-Medium.ttf")
