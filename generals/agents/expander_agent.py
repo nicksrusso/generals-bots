@@ -3,20 +3,23 @@ import numpy as np
 from generals.core.action import Action, compute_valid_move_mask
 from generals.core.config import DIRECTIONS
 from generals.core.observation import Observation
+from generals.core.comabat_utils import should_attack, predict_combat_outcome
+from generals.core.channels import UNIT_TYPES
 
 from .agent import Agent
 
 
 class ExpanderAgent(Agent):
-    def __init__(self, id: str = "Expander"):
+    def __init__(self, id: str = "Expander", win_threshold: float = 0.6):
         super().__init__(id)
+        self.win_threshold = win_threshold
 
     def act(self, observation: Observation) -> Action:
         """
         Heuristically selects a valid (expanding) action.
-        Prioritizes capturing opponent and then neutral cells.
+        Prioritizes capturing opponent and then neutral cells,
+        using combat outcome prediction to make intelligent decisions.
         """
-
         mask = compute_valid_move_mask(observation)
         valid_moves = np.argwhere(mask == 1)
 
@@ -28,36 +31,73 @@ class ExpanderAgent(Agent):
         opponent_mask = observation.opponent_cells
         neutral_mask = observation.neutral_cells
 
-        # Find moves that capture opponent or neutral cells
-        capture_opponent_moves = np.zeros(len(valid_moves))
-        capture_neutral_moves = np.zeros(len(valid_moves))
+        # Store moves with their predicted win probabilities
+        opponent_moves = []
+        neutral_moves = []
 
         for move_idx, move in enumerate(valid_moves):
-            orig_row, orig_col, direction, unit_type = move
+            orig_row, orig_col, direction, unit_type_idx = move
 
-            # Get the appropriate unit array based on the unit type
-            unit_array = unit_arrays[unit_type]
-
+            # Get the destination position
             row_offset, col_offset = DIRECTIONS[direction].value
             dest_row, dest_col = (orig_row + row_offset, orig_col + col_offset)
-            enough_armies_to_capture = unit_array[orig_row, orig_col] > observation.armies[dest_row, dest_col] + 1
 
-            if opponent_mask[dest_row, dest_col] and enough_armies_to_capture:
-                capture_opponent_moves[move_idx] = 1
-            elif neutral_mask[dest_row, dest_col] and enough_armies_to_capture:
-                capture_neutral_moves[move_idx] = 1
+            orig_pos = (orig_row, orig_col)
+            dest_pos = (dest_row, dest_col)
 
-        if np.any(capture_opponent_moves):  # Capture random opponent cell if possible
-            move_index = np.random.choice(np.nonzero(capture_opponent_moves)[0])
-            move = valid_moves[move_index]
-        elif np.any(capture_neutral_moves):  # Capture random neutral cell if possible
-            move_index = np.random.choice(np.nonzero(capture_neutral_moves)[0])
-            move = valid_moves[move_index]
-        else:  # Otherwise, select a random valid action
+            # Only consider moves with enough units
+            unit_array = unit_arrays[unit_type_idx]
+            if unit_array[orig_row, orig_col] <= 1:
+                continue
+
+            # For opponent cells, use combat prediction to assess win probability
+            if opponent_mask[dest_row, dest_col]:
+                # should_attack expects unit_type_idx as an integer
+                if should_attack(observation, orig_pos, dest_pos, unit_type_idx, self.win_threshold):
+                    # predict_combat_outcome expects unit_type as a string
+                    unit_type_str = UNIT_TYPES[unit_type_idx]
+                    # Predict win probability
+                    win_prob, _ = predict_combat_outcome(
+                        observation, orig_pos, dest_pos, unit_type_str, unit_array[orig_row, orig_col] - 1
+                    )
+                    opponent_moves.append((move, win_prob))
+
+            # For neutral cells, we'll also evaluate the likelihood of success
+            elif neutral_mask[dest_row, dest_col]:
+                # Neutral cells are usually easier to capture
+                # predict_combat_outcome expects unit_type as a string
+                unit_type_str = UNIT_TYPES[unit_type_idx]
+                win_prob, _ = predict_combat_outcome(
+                    observation, orig_pos, dest_pos, unit_type_str, unit_array[orig_row, orig_col] - 1
+                )
+                if win_prob >= self.win_threshold:
+                    neutral_moves.append((move, win_prob))
+
+        # Prioritize opponent moves, then neutral moves
+        selected_move = None
+
+        if opponent_moves:
+            # Sort by win probability (descending)
+            opponent_moves.sort(key=lambda x: x[1], reverse=True)
+            selected_move = opponent_moves[0][0]
+        elif neutral_moves:
+            # Sort by win probability (descending)
+            neutral_moves.sort(key=lambda x: x[1], reverse=True)
+            selected_move = neutral_moves[0][0]
+        else:
+            # Otherwise, select a random valid action
             move_index = np.random.choice(len(valid_moves))
-            move = valid_moves[move_index]
+            selected_move = valid_moves[move_index]
 
-        action = Action(to_pass=False, row=move[0], col=move[1], direction=move[2], to_split=False)
+        action = Action(
+            to_pass=False,
+            row=selected_move[0],
+            col=selected_move[1],
+            direction=selected_move[2],
+            unit_type_idx=selected_move[3],
+            to_split=False,
+        )
+
         return action
 
     def reset(self):
