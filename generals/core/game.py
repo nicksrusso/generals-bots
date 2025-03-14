@@ -13,7 +13,28 @@ Info: TypeAlias = dict[str, Any]
 
 
 class Game:
-    # ... [existing initialization code would remain the same] ...
+    def __init__(self, grid: Grid, agents: list[str]):
+        # Agents
+        self.agents = agents
+        self.agent_order = self.agents[:]
+
+        # Grid
+        _grid = grid.grid
+        self.channels = Channels(_grid, self.agents)
+        self.grid_dims = (_grid.shape[0], _grid.shape[1])
+        self.general_positions = {agent: np.argwhere(_grid == chr(ord("A") + i))[0] for i, agent in enumerate(self.agents)}
+
+        # Time stuff
+        self.time = 0
+        self.increment_rate = 50
+
+        # Limits
+        self.max_army_value = 100_000
+        self.max_land_value = np.prod(self.grid_dims)
+        self.max_timestep = 100_000
+
+        self.winner = None
+        self.loser = None
 
     def resolve_combat(
         self,
