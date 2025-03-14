@@ -1,5 +1,6 @@
 from typing import Any, TypeAlias
 
+import numba as nb
 import numpy as np
 
 from .action import Action
@@ -10,6 +11,16 @@ from .observation import Observation
 
 # Type aliases
 Info: TypeAlias = dict[str, Any]
+
+
+@nb.njit(cache=True)
+def calculate_army_size(armies, ownership):
+    return np.int32(np.sum(armies * ownership))
+
+
+@nb.njit(cache=True)
+def calculate_land_size(ownership):
+    return np.int32(np.sum(ownership))
 
 
 class Game:
@@ -131,6 +142,30 @@ class Game:
                 remaining_units[unit_type] = unit_count * remaining_percentage
 
         return winner_agent, remaining_units
+
+    def is_done(self) -> bool:
+        return self.winner is not None
+
+    def get_infos(self) -> dict[str, Info]:
+        """
+        Returns a dictionary of player statistics.
+        Keys and values are as follows:
+        - army: total army size
+        - land: total land size
+        - is_done: True if the game is over, False otherwise
+        - is_winner: True if the player won, False otherwise
+        """
+        players_stats = {}
+        for agent in self.agents:
+            army_size = calculate_army_size(self.channels.armies, self.channels.ownership[agent])
+            land_size = calculate_land_size(self.channels.ownership[agent])
+            players_stats[agent] = {
+                "army": army_size,
+                "land": land_size,
+                "is_done": self.is_done(),
+                "is_winner": self.winner == agent,
+            }
+        return players_stats
 
     def step(self, actions: dict[str, Action]) -> tuple[dict[str, Observation], dict[str, Any]]:
         """

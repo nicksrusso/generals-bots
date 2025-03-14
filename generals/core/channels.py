@@ -36,13 +36,13 @@ class Channels:
 
     def __init__(self, grid: np.ndarray, _agents: list[str]):
         # Initialize unit arrays - instead of one armies array, create separate arrays for each unit type
-        self._cavalry = np.zeros_like(grid, dtype=np.float16)
-        self._infantry = np.zeros_like(grid, dtype=np.float16)
-        self._archers = np.zeros_like(grid, dtype=np.float16)
-        self._siege = np.zeros_like(grid, dtype=np.float16)
+        self._cavalry = np.zeros_like(grid, dtype=np.float32)
+        self._infantry = np.zeros_like(grid, dtype=np.float32)
+        self._archers = np.zeros_like(grid, dtype=np.float32)
+        self._siege = np.zeros_like(grid, dtype=np.float32)
 
         # Initialize with one default unit type at general positions (infantry)
-        self._infantry = np.where(np.isin(grid, valid_generals), 1, 0).astype(np.float16)
+        self._infantry = np.where(np.isin(grid, valid_generals), 1, 0).astype(np.float32)
 
         self._generals = np.where(np.isin(grid, valid_generals), 1, 0).astype(bool)
         self._mountains = np.where(grid == MOUNTAIN, 1, 0).astype(bool)
@@ -55,7 +55,7 @@ class Channels:
             self._ownership[agent] = np.where(grid == chr(ord("A") + i), 1, 0).astype(bool)
 
         # City costs are 40 + digit in the cell - add city populations as infantry
-        city_costs = np.where(np.char.isdigit(grid), grid, "0").astype(np.float16)
+        city_costs = np.where(np.char.isdigit(grid), grid, "0").astype(np.float32)
         city_costs += np.where(grid == "x", 10, 0)
         # Add city units as infantry
         city_population = 40 * self._cities + city_costs
