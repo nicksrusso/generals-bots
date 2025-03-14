@@ -24,7 +24,7 @@ class ExpanderAgent(Agent):
         if len(valid_moves) == 0:
             return Action(to_pass=True)
 
-        army_mask = observation.armies
+        unit_arrays = [observation.cavalry, observation.infantry, observation.archers, observation.siege]
         opponent_mask = observation.opponent_cells
         neutral_mask = observation.neutral_cells
 
@@ -33,10 +33,14 @@ class ExpanderAgent(Agent):
         capture_neutral_moves = np.zeros(len(valid_moves))
 
         for move_idx, move in enumerate(valid_moves):
-            orig_row, orig_col, direction = move
+            orig_row, orig_col, direction, unit_type = move
+
+            # Get the appropriate unit array based on the unit type
+            unit_array = unit_arrays[unit_type]
+
             row_offset, col_offset = DIRECTIONS[direction].value
             dest_row, dest_col = (orig_row + row_offset, orig_col + col_offset)
-            enough_armies_to_capture = army_mask[orig_row, orig_col] > army_mask[dest_row, dest_col] + 1
+            enough_armies_to_capture = unit_array[orig_row, orig_col] > observation.armies[dest_row, dest_col] + 1
 
             if opponent_mask[dest_row, dest_col] and enough_armies_to_capture:
                 capture_opponent_moves[move_idx] = 1

@@ -10,10 +10,10 @@ UNIT_TYPES = ["cavalry", "infantry", "archers", "siege"]
 
 # Combat effectiveness matrix (attacking unit type vs defending unit type)
 COMBAT_EFFECTIVENESS = {
-    "cavalry": {"cavalry": 1.0, "infantry": 0.75, "archers": 1.25, "siege": 1.5},
-    "infantry": {"cavalry": 1.25, "infantry": 1.0, "archers": 0.75, "siege": 1.0},
-    "archers": {"cavalry": 1.5, "infantry": 0.75, "archers": 1.0, "siege": 1.25},
-    "siege": {"cavalry": 0.5, "infantry": 0.75, "archers": 0.75, "siege": 1.0},
+    "cavalry": {"cavalry": 1.0, "infantry": 0.7, "archers": 1.5, "siege": 1.3},
+    "infantry": {"cavalry": 1.5, "infantry": 1.0, "archers": 0.7, "siege": 1.3},
+    "archers": {"cavalry": 0.7, "infantry": 1.5, "archers": 1.0, "siege": 1.3},
+    "siege": {"cavalry": 0.5, "infantry": 0.5, "archers": 0.5, "siege": 1.0},
 }
 
 
